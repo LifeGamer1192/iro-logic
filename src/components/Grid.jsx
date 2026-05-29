@@ -33,23 +33,31 @@ export default function Grid({ values, hintKeys, selected, rowErrors, colErrors,
             })}
           </div>
           {/* 行（よこ）のエラーメッセージ */}
-          <div className={`${GUTTER_W} pl-1 text-left text-red-600 text-[12px] font-bold leading-tight`}>
+          <div className={`${GUTTER_W} pl-1 flex items-center`}>
             {rowErrors[r] && (
-              <span title="この よこの れつに おなじ いろが あるよ">⚠️ おなじ</span>
+              <span
+                className="inline-flex items-center gap-0.5 bg-red-500 text-white text-[11px] font-bold rounded px-1.5 py-0.5"
+                title="この よこの れつに おなじ いろが 2つ あるよ"
+              >
+                ⬅よこ
+              </span>
             )}
           </div>
         </div>
       ))}
 
-      {/* 列（たて）のエラーメッセージ（各列の真下に配置） */}
+      {/* 列（たて）のエラーメッセージ（各列の真下に、上向き矢印つきで分かりやすく） */}
       <div className="flex">
         {cols.map((c) => (
-          <div
-            key={c}
-            className={`${CELL_W} text-center text-red-600 text-[12px] font-bold pt-1 leading-tight`}
-          >
+          <div key={c} className={`${CELL_W} flex flex-col items-center pt-1 leading-tight`}>
             {colErrors[c] && (
-              <span title="この たての れつに おなじ いろが あるよ">⚠️ おなじ</span>
+              <span
+                className="inline-flex flex-col items-center bg-red-500 text-white text-[11px] font-bold rounded px-1.5 py-0.5"
+                title="この たての れつに おなじ いろが 2つ あるよ"
+              >
+                <span aria-hidden="true">⬆</span>
+                <span>たてNG</span>
+              </span>
             )}
           </div>
         ))}

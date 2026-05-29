@@ -85,4 +85,34 @@ describe('api/scores ハンドラ（インメモリ）', () => {
     await handler({ method: 'DELETE' }, res);
     expect(res.statusCode).toBe(405);
   });
+
+  it('cubeボード：全6クリアで保存でき、classicとは別管理', async () => {
+    // cube は6クリアでOK
+    const r1 = mockRes();
+    await handler({ method: 'POST', body: { board: 'cube', name: 'きゅーぶ', totalSec: 300, clears: 6 } }, r1);
+    expect(r1.statusCode).toBe(200);
+    expect(r1.body.board).toBe('cube');
+
+    // cube の GET には載るが classic には載らない
+    const rc = mockRes();
+    await handler({ method: 'GET', query: { board: 'cube' } }, rc);
+    expect(rc.body.scores.map((s) => s.name)).toEqual(['きゅーぶ']);
+
+    const rClassic = mockRes();
+    await handler({ method: 'GET', query: { board: 'classic' } }, rClassic);
+    expect(rClassic.body.scores).toEqual([]);
+  });
+
+  it('cubeボード：6未満のクリアは 400', async () => {
+    const res = mockRes();
+    await handler({ method: 'POST', body: { board: 'cube', name: 'x', totalSec: 100, clears: 5 } }, res);
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error).toBe('not-complete');
+  });
+
+  it('classicボードは20クリア必須（cube基準ではない）', async () => {
+    const res = mockRes();
+    await handler({ method: 'POST', body: { board: 'classic', name: 'x', totalSec: 100, clears: 6 } }, res);
+    expect(res.statusCode).toBe(400); // classic は6では不足
+  });
 });

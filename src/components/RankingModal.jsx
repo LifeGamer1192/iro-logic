@@ -3,7 +3,7 @@ import { formatTime } from '../utils/play.js';
 
 const MEDAL = ['🥇', '🥈', '🥉'];
 
-export default function RankingModal({ open, onClose, scores, loading, error }) {
+export default function RankingModal({ open, onClose, scores, loading, error, title = '🏆 ランキング' }) {
   if (!open) return null;
 
   return (
@@ -19,7 +19,7 @@ export default function RankingModal({ open, onClose, scores, loading, error }) 
         onClick={(e) => e.stopPropagation()}
       >
         <h2 id="ranking-title" className="text-[22px] font-bold text-center mb-3">
-          🏆 ランキング
+          {title}
         </h2>
 
         {loading && <p className="text-center text-gray-500 py-6">よみこみちゅう…</p>}

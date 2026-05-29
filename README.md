@@ -68,8 +68,11 @@ src/
 
 全20クリアの合計タイムを名前付きで保存・表示できます。`api/scores.js`（Vercel サーバーレス関数）が保存と取得を担当します。
 
-- `GET /api/scores` … 上位ランキング（速い順）
-- `POST /api/scores` … スコア保存（全20クリアのみ受付）
+- `GET /api/scores?board=classic|cube` … 上位ランキング（速い順）
+- `POST /api/scores` （body に `board`）… スコア保存
+- ボードは **classic（2D・全20クリア）** と **cube（3D・全6クリア）** の2系統で独立
+
+3Dモードには、回転できるCSS 3D立方体ビュー（平面の編集が即時反映）と、「はしら」を図解するルールポップアップを備えています。
 
 保存先は環境変数があれば Upstash Redis（Vercel KV）、なければインメモリ（一時・非永続）にフォールバックします。永続化するには以下のいずれかを設定してください（Vercel で Upstash/KV を接続すると自動注入されます）。
 
