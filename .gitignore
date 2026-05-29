@@ -1,0 +1,17 @@
+node_modules
+dist
+dist-ssr
+*.local
+.vercel
+.DS_Store
+
+# ローカル環境固有（ユーザー名・絶対パスを含むため公開しない）
+.claude/
+
+# 仕様書（非公開：製品設計・ロードマップのため公開しない）
+*仕様書*.md
+
+# Python ツールの中間生成物
+tools/__pycache__
+tools/debug_out.txt
+tools/debug_check.py

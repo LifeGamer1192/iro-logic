@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #f8f9fa;
+  font-family: system-ui, -apple-system, 'Segoe UI', 'Hiragino Kaku Gothic ProN',
+    'Yu Gothic', Meiryo, sans-serif;
+  -webkit-text-size-adjust: 100%;
+  /* タップ時のハイライトとダブルタップズームを抑制（単タップのみ反応：仕様書§6） */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/*
+ * 色覚多様性（CVD）対応テクスチャ：仕様書§3.3
+ *   赤 → 斜線パターン
+ *   黄 → ドットパターン
+ *   青 → 横線パターン
+ * 色だけに依存せず、模様でも色を識別できるようにする。
+ */
+@layer components {
+  .iro-cell {
+    background-repeat: repeat;
+  }
+
+  .iro-red {
+    background-color: #ff0000;
+    background-image: repeating-linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.55) 0,
+      rgba(255, 255, 255, 0.55) 4px,
+      transparent 4px,
+      transparent 11px
+    );
+  }
+
+  .iro-yellow {
+    background-color: #ffd700;
+    background-image: radial-gradient(rgba(0, 0, 0, 0.4) 22%, transparent 24%);
+    background-size: 13px 13px;
+    background-position: 0 0;
+  }
+
+  .iro-blue {
+    background-color: #0066ff;
+    background-image: repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.6) 0,
+      rgba(255, 255, 255, 0.6) 4px,
+      transparent 4px,
+      transparent 11px
+    );
+  }
+}
