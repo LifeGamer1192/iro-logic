@@ -14,7 +14,14 @@ import {
   cellKey,
   SIZE,
 } from './utils/validate.js';
-import { computeLineErrors } from './utils/play.js';
+import { computeLineErrors, countBlanks, flagStage } from './utils/play.js';
+
+// ★3 チート抑止：壁時計(Date.now)ではなく単調増加クロックを使い、
+// OSの時計巻き戻しによる時間ごまかしを無効化する。
+const monoNow = () =>
+  typeof performance !== 'undefined' && performance.now
+    ? performance.now()
+    : Date.now();
 
 const TUTORIAL_KEY = 'iro-logic:tutorial-seen';
 
@@ -43,10 +50,12 @@ export default function App() {
     () => localStorage.getItem(TUTORIAL_KEY) !== '1'
   );
 
-  // --- タイマー関連 ---
+  // --- タイマー関連（★3：performance.now ベース） ---
   const [times, setTimes] = useState({}); // index → クリア所要秒
-  const [stageStartAt, setStageStartAt] = useState(() => Date.now());
-  const [now, setNow] = useState(() => Date.now());
+  const [flags, setFlags] = useState({}); // index → { tooFewMoves, tooFast, suspicious }
+  const [placeCount, setPlaceCount] = useState(0); // 現ステージで色を置いた回数（★2）
+  const [stageStartAt, setStageStartAt] = useState(() => monoNow());
+  const [now, setNow] = useState(() => monoNow());
 
   const hintKeys = useMemo(() => hintKeysOf(puzzle.initial), [puzzle]);
   const { rows: rowErrors, cols: colErrors } = useMemo(
@@ -61,7 +70,7 @@ export default function App() {
 
   // 1秒ごとに now を更新してライブ表示
   useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 1000);
+    const id = setInterval(() => setNow(monoNow()), 1000);
     return () => clearInterval(id);
   }, []);
 
@@ -71,7 +80,8 @@ export default function App() {
     setValues(gridToValues(puzzles[i].initial));
     setSelected(null);
     setResult(null);
-    const t = Date.now();
+    setPlaceCount(0);
+    const t = monoNow();
     setStageStartAt(t);
     setNow(t);
   };
@@ -83,6 +93,7 @@ export default function App() {
   const handlePick = (color) => {
     if (!selected) return; // マス未選択時は何もしない
     setValues((prev) => ({ ...prev, [selected]: color }));
+    setPlaceCount((n) => n + 1); // ★2：操作回数を記録
     setResult(null); // 入力が変わったら判定結果はクリア
   };
 
@@ -95,9 +106,20 @@ export default function App() {
     const ok = validateByGroups(values, groups);
     setResult(ok ? 'correct' : 'wrong');
     if (ok && times[index] == null) {
-      const sec = Math.floor((Date.now() - stageStartAt) / 1000);
+      const sec = Math.floor((monoNow() - stageStartAt) / 1000);
+      // ★2：下限秒数と操作回数で記録の妥当性を判定
+      const flag = flagStage({
+        sec,
+        placed: placeCount,
+        blanks: countBlanks(puzzle.initial),
+        difficulty: puzzle.difficulty,
+      });
       setTimes((prev) => ({ ...prev, [index]: sec }));
-      console.log(`[いろロジック] クリア: id=${puzzle.id} 所要 ${sec}秒`);
+      setFlags((prev) => ({ ...prev, [index]: flag }));
+      console.log(
+        `[いろロジック] クリア: id=${puzzle.id} 所要 ${sec}秒 操作 ${placeCount}回` +
+          (flag.suspicious ? ' ⚠️記録対象外' : '')
+      );
     } else {
       console.log(`[いろロジック] 確認: id=${puzzle.id} 判定=${ok ? '正解' : '不正解'}`, values);
     }
@@ -107,13 +129,19 @@ export default function App() {
     setValues(gridToValues(puzzle.initial));
     setSelected(null);
     setResult(null);
-    // このステージのタイムを取り消して計り直す
+    setPlaceCount(0);
+    // このステージのタイム・フラグを取り消して計り直す
     setTimes((prev) => {
       const next = { ...prev };
       delete next[index];
       return next;
     });
-    const t = Date.now();
+    setFlags((prev) => {
+      const next = { ...prev };
+      delete next[index];
+      return next;
+    });
+    const t = monoNow();
     setStageStartAt(t);
     setNow(t);
   };
@@ -125,7 +153,7 @@ export default function App() {
     localStorage.setItem(TUTORIAL_KEY, '1');
     setShowTutorial(false);
     // チュートリアルを閉じてから計測開始
-    const t = Date.now();
+    const t = monoNow();
     setStageStartAt(t);
     setNow(t);
   };
@@ -179,6 +207,7 @@ export default function App() {
         <TimePanel
           puzzles={puzzles}
           times={times}
+          flags={flags}
           currentIndex={index}
           currentElapsedSec={currentElapsedSec}
         />

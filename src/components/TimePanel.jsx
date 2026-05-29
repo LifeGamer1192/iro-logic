@@ -1,10 +1,12 @@
 // タイム表示：今ステージの経過時間・各ステージ所要時間・各級合計・全体合計。
-import { formatTime, summarizeTimes } from '../utils/play.js';
+import { formatTime, summarizeTimes, verificationCode } from '../utils/play.js';
 
 const DIFF_LABEL = { easy: 'しょきゅう', medium: 'ちゅうきゅう', hard: 'じょうきゅう' };
 
-export default function TimePanel({ puzzles, times, currentIndex, currentElapsedSec }) {
+export default function TimePanel({ puzzles, times, flags = {}, currentIndex, currentElapsedSec }) {
   const summary = summarizeTimes(times, puzzles);
+  const tampered = Object.values(flags).some((f) => f?.suspicious); // ★2：怪しい記録あり
+  const code = verificationCode(times, { tampered });
 
   return (
     <section className="w-full rounded-xl bg-white border border-gray-200 p-3 text-[#222]">
@@ -33,19 +35,27 @@ export default function TimePanel({ puzzles, times, currentIndex, currentElapsed
                 {stages.map(({ p, i }) => {
                   const done = times[i] != null;
                   const current = i === currentIndex;
+                  const susp = flags[i]?.suspicious;
                   return (
                     <span
                       key={p.id}
                       className={
                         'text-[11px] px-1.5 py-0.5 rounded tabular-nums border ' +
-                        (done
-                          ? 'bg-green-100 border-green-300 text-green-800'
-                          : 'bg-gray-50 border-gray-200 text-gray-400') +
+                        (susp
+                          ? 'bg-red-100 border-red-300 text-red-700'
+                          : done
+                            ? 'bg-green-100 border-green-300 text-green-800'
+                            : 'bg-gray-50 border-gray-200 text-gray-400') +
                         (current ? ' ring-2 ring-blue-400' : '')
                       }
-                      title={`ステージ ${p.id}`}
+                      title={
+                        susp
+                          ? 'はやすぎる／操作が少ない記録（記録対象外）'
+                          : `ステージ ${p.id}`
+                      }
                     >
                       {p.id}: {done ? formatTime(times[i]) : '—'}
+                      {susp ? ' ⚠️' : ''}
                     </span>
                   );
                 })}
@@ -61,6 +71,13 @@ export default function TimePanel({ puzzles, times, currentIndex, currentElapsed
         <span className="tabular-nums">{formatTime(summary.grandTotal)}</span>
       </div>
 
+      {/* 検証コード（改ざん照合用・★2）。1問でもクリアしたら表示 */}
+      {summary.doneCount > 0 && (
+        <p className="mt-1 text-[11px] text-gray-500 text-right">
+          けんしょうコード: <span className="font-mono font-bold tracking-wider">{code}</span>
+        </p>
+      )}
+
       {/* 全クリア時：キャプチャ案内つきの合計表示 */}
       {summary.allDone && (
         <div className="mt-3 rounded-xl bg-amber-50 border-2 border-amber-300 p-3 text-center">
@@ -68,7 +85,15 @@ export default function TimePanel({ puzzles, times, currentIndex, currentElapsed
           <p className="text-[26px] font-extrabold tabular-nums text-amber-900 my-1">
             ごうけい {formatTime(summary.grandTotal)}
           </p>
-          <p className="text-[14px] font-bold text-amber-800">
+          {tampered && (
+            <p className="text-[13px] font-bold text-red-600 mb-1">
+              ⚠️ はやすぎる記録が あるため「認定なし」です
+            </p>
+          )}
+          <p className="text-[13px] text-amber-800">
+            けんしょうコード: <span className="font-mono font-bold tracking-wider">{code}</span>
+          </p>
+          <p className="text-[14px] font-bold text-amber-800 mt-1">
             📸 このがめんを スクショして きろくしてね！
           </p>
         </div>

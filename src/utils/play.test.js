@@ -1,5 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import { formatTime, lineHasDuplicate, computeLineErrors, summarizeTimes } from './play.js';
+import {
+  formatTime,
+  lineHasDuplicate,
+  computeLineErrors,
+  summarizeTimes,
+  countBlanks,
+  flagStage,
+  verificationCode,
+  MIN_PLAUSIBLE_SEC,
+} from './play.js';
 import { cellKey, gridToValues } from './validate.js';
 
 describe('formatTime', () => {
@@ -93,5 +102,70 @@ describe('summarizeTimes', () => {
     const s = summarizeTimes(times, puzzles);
     expect(s.allDone).toBe(true);
     expect(s.grandTotal).toBe(40);
+  });
+});
+
+describe('countBlanks', () => {
+  it('null マスの数を数える', () => {
+    expect(
+      countBlanks([
+        ['red', 'yellow', null],
+        [null, null, 'yellow'],
+        ['blue', null, null],
+      ])
+    ).toBe(5); // ヒント4 → 空き5
+  });
+});
+
+describe('flagStage（★2 チート抑止判定）', () => {
+  it('十分な操作・下限以上の時間なら正常', () => {
+    const f = flagStage({ sec: 30, placed: 5, blanks: 5, difficulty: 'easy' });
+    expect(f.suspicious).toBe(false);
+  });
+
+  it('操作回数が空きマス未満なら tooFewMoves（盤面注入など）', () => {
+    const f = flagStage({ sec: 30, placed: 2, blanks: 5, difficulty: 'easy' });
+    expect(f.tooFewMoves).toBe(true);
+    expect(f.suspicious).toBe(true);
+  });
+
+  it('下限秒数未満なら tooFast', () => {
+    const f = flagStage({ sec: 1, placed: 7, blanks: 7, difficulty: 'hard' });
+    expect(f.tooFast).toBe(true); // hard の下限は 5秒
+    expect(f.suspicious).toBe(true);
+  });
+
+  it('難易度別の下限を境界で判定', () => {
+    // ちょうど下限 = OK、下限-1 = NG
+    expect(flagStage({ sec: MIN_PLAUSIBLE_SEC.medium, placed: 6, blanks: 6, difficulty: 'medium' }).tooFast).toBe(false);
+    expect(flagStage({ sec: MIN_PLAUSIBLE_SEC.medium - 1, placed: 6, blanks: 6, difficulty: 'medium' }).tooFast).toBe(true);
+  });
+
+  it('0秒や負の時間は必ず tooFast', () => {
+    expect(flagStage({ sec: 0, placed: 5, blanks: 5, difficulty: 'easy' }).tooFast).toBe(true);
+  });
+});
+
+describe('verificationCode', () => {
+  it('同じ記録なら同じコード（決定的）', () => {
+    const t = { 0: 30, 1: 45 };
+    expect(verificationCode(t)).toBe(verificationCode(t));
+  });
+
+  it('順序が違っても同じコード', () => {
+    expect(verificationCode({ 0: 30, 1: 45 })).toBe(verificationCode({ 1: 45, 0: 30 }));
+  });
+
+  it('記録が変わるとコードも変わる', () => {
+    expect(verificationCode({ 0: 30 })).not.toBe(verificationCode({ 0: 31 }));
+  });
+
+  it('改ざんフラグでコードが変わる', () => {
+    const t = { 0: 30, 1: 45 };
+    expect(verificationCode(t, { tampered: true })).not.toBe(verificationCode(t));
+  });
+
+  it('6文字の英数字コード', () => {
+    expect(verificationCode({ 0: 30 })).toMatch(/^[0-9A-Z]{6}$/);
   });
 });
