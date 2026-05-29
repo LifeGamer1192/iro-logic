@@ -2,7 +2,7 @@
 
 const COLOR_LABEL = { red: 'あか', yellow: 'きいろ', blue: 'あお' };
 
-export default function Cell({ color, isHint, isSelected, disabled, onSelect }) {
+export default function Cell({ color, isHint, isSelected, isError, disabled, onSelect }) {
   const base =
     'flex items-center justify-center select-none ' +
     'w-[70px] h-[70px] tab:w-[75px] tab:h-[75px] pc:w-[85px] pc:h-[85px] xl:w-[100px] xl:h-[100px] ' +
@@ -11,10 +11,12 @@ export default function Cell({ color, isHint, isSelected, disabled, onSelect }) 
   // 色 + テクスチャ（color が無いマスは白）
   const colorClass = color ? `iro-cell iro-${color}` : 'bg-white';
 
-  // 枠線：選択中は太く濃い青、通常は濃いグレー
+  // 枠線：選択中=青、エラー行/列=赤、通常=濃いグレー
   const borderClass = isSelected
     ? 'border-blue-500 shadow-[0_0_0_3px_rgba(59,130,246,0.5)] z-10'
-    : 'border-[#333]';
+    : isError
+      ? 'border-red-500 shadow-[0_0_0_3px_rgba(239,68,68,0.45)] z-10'
+      : 'border-[#333]';
 
   // ヒントマスは編集不可（仕様書§12.4）。空きマスのみクリック可。
   const cursorClass = disabled ? 'cursor-default' : 'cursor-pointer';

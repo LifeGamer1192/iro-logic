@@ -4,6 +4,8 @@ import Grid from './components/Grid.jsx';
 import ColorButtons from './components/ColorButtons.jsx';
 import Controls from './components/Controls.jsx';
 import Tutorial from './components/Tutorial.jsx';
+import RuleInfo from './components/RuleInfo.jsx';
+import TimePanel from './components/TimePanel.jsx';
 import {
   buildGroups2D,
   gridToValues,
@@ -12,6 +14,7 @@ import {
   cellKey,
   SIZE,
 } from './utils/validate.js';
+import { computeLineErrors } from './utils/play.js';
 
 const TUTORIAL_KEY = 'iro-logic:tutorial-seen';
 
@@ -40,14 +43,37 @@ export default function App() {
     () => localStorage.getItem(TUTORIAL_KEY) !== '1'
   );
 
-  const hintKeys = useMemo(() => hintKeysOf(puzzle.initial), [puzzle]);
+  // --- タイマー関連 ---
+  const [times, setTimes] = useState({}); // index → クリア所要秒
+  const [stageStartAt, setStageStartAt] = useState(() => Date.now());
+  const [now, setNow] = useState(() => Date.now());
 
-  // 問題を切り替えたら状態をリセット（前の問題の状態は保存しない：仕様書§3.2）
+  const hintKeys = useMemo(() => hintKeysOf(puzzle.initial), [puzzle]);
+  const { rows: rowErrors, cols: colErrors } = useMemo(
+    () => computeLineErrors(values),
+    [values]
+  );
+  const hasLineError = rowErrors.some(Boolean) || colErrors.some(Boolean);
+
+  // 解いた問題は記録時間を、未解答の問題は経過時間（ライブ）を表示
+  const currentElapsedSec =
+    times[index] != null ? times[index] : Math.floor((now - stageStartAt) / 1000);
+
+  // 1秒ごとに now を更新してライブ表示
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  // 問題を切り替えたら状態とタイマー開始時刻をリセット（前の状態は保存しない）
   const loadPuzzle = (i) => {
     setIndex(i);
     setValues(gridToValues(puzzles[i].initial));
     setSelected(null);
     setResult(null);
+    const t = Date.now();
+    setStageStartAt(t);
+    setNow(t);
   };
 
   const handleSelectCell = (key) => {
@@ -68,13 +94,28 @@ export default function App() {
     }
     const ok = validateByGroups(values, groups);
     setResult(ok ? 'correct' : 'wrong');
-    console.log(`[いろロジック] 確認: id=${puzzle.id} 判定=${ok ? '正解' : '不正解'}`, values);
+    if (ok && times[index] == null) {
+      const sec = Math.floor((Date.now() - stageStartAt) / 1000);
+      setTimes((prev) => ({ ...prev, [index]: sec }));
+      console.log(`[いろロジック] クリア: id=${puzzle.id} 所要 ${sec}秒`);
+    } else {
+      console.log(`[いろロジック] 確認: id=${puzzle.id} 判定=${ok ? '正解' : '不正解'}`, values);
+    }
   };
 
   const handleReset = () => {
     setValues(gridToValues(puzzle.initial));
     setSelected(null);
     setResult(null);
+    // このステージのタイムを取り消して計り直す
+    setTimes((prev) => {
+      const next = { ...prev };
+      delete next[index];
+      return next;
+    });
+    const t = Date.now();
+    setStageStartAt(t);
+    setNow(t);
   };
 
   const handlePrev = () => index > 0 && loadPuzzle(index - 1);
@@ -83,9 +124,12 @@ export default function App() {
   const closeTutorial = () => {
     localStorage.setItem(TUTORIAL_KEY, '1');
     setShowTutorial(false);
+    // チュートリアルを閉じてから計測開始
+    const t = Date.now();
+    setStageStartAt(t);
+    setNow(t);
   };
 
-  // デバッグ：現在のグリッド状態を確認できるようにする（仕様書§10 デバッグ対応）
   useEffect(() => {
     console.log(`[いろロジック] 問題 ${index + 1}/${puzzles.length} (id=${puzzle.id}, ${puzzle.difficulty})`);
   }, [index, puzzle]);
@@ -94,15 +138,26 @@ export default function App() {
     <div className="min-h-screen bg-[#f8f9fa] text-[#222] flex flex-col items-center px-4 py-5">
       {showTutorial && <Tutorial onClose={closeTutorial} />}
 
-      <main className="w-full max-w-md flex flex-col items-center gap-5">
+      <main className="w-full max-w-md flex flex-col items-center gap-4">
         <h1 className="text-[20px] font-bold">いろロジック</h1>
+
+        <RuleInfo />
 
         <Grid
           values={values}
           hintKeys={hintKeys}
           selected={selected}
+          rowErrors={rowErrors}
+          colErrors={colErrors}
           onSelectCell={handleSelectCell}
         />
+
+        {/* 許容されない配置（同色重複）の全体メッセージ */}
+        {hasLineError && (
+          <p className="text-red-600 font-bold text-[14px] text-center">
+            ⚠️ おなじ いろが ならんでいる ぎょう／れつ を なおしてね
+          </p>
+        )}
 
         <p className="text-[14px] text-gray-600 min-h-[20px]">
           {selected ? 'いろボタンで うめてね' : 'マスを えらんでね'}
@@ -119,6 +174,13 @@ export default function App() {
           onReset={handleReset}
           onPrev={handlePrev}
           onNext={handleNext}
+        />
+
+        <TimePanel
+          puzzles={puzzles}
+          times={times}
+          currentIndex={index}
+          currentElapsedSec={currentElapsedSec}
         />
       </main>
     </div>
