@@ -42,7 +42,7 @@ function CubeCell({ color, isHint, isSelected, isError, onSelect }) {
       aria-label={color ? `${COLOR_LABEL[color]}${isHint ? '（ヒント）' : ''}` : 'からのマス'}
       aria-pressed={isSelected}
       className={
-        'flex items-center justify-center w-14 h-14 pc:w-16 pc:h-16 border-2 box-border ' +
+        'flex items-center justify-center w-12 h-12 pc:w-14 pc:h-14 border-2 box-border ' +
         (color ? `iro-cell iro-${color}` : 'bg-white') +
         ' ' +
         border +
@@ -267,6 +267,9 @@ export default function CubeGame() {
 
       {/* 3D立方体ビュー（ドラッグで回転・平面の編集が即時反映） */}
       <CubeView values={values} />
+
+      {/* 色ボタン（上）：1だんめの上にも配置（縦長対策で手の届く所に2か所） */}
+      <ColorButtons onPick={handlePick} disabled={!selected} />
 
       {/* 3段の層スライス（縦並び。ここで色を置く） */}
       <div className="flex flex-col items-center gap-4">
