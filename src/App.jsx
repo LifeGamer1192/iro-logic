@@ -7,6 +7,7 @@ import Tutorial from './components/Tutorial.jsx';
 import RuleInfo from './components/RuleInfo.jsx';
 import TimePanel from './components/TimePanel.jsx';
 import RankingModal from './components/RankingModal.jsx';
+import CubeGame from './components/CubeGame.jsx';
 import { fetchScores, submitScore } from './utils/api.js';
 import { summarizeTimes, verificationCode } from './utils/play.js';
 import {
@@ -43,6 +44,7 @@ const hintKeysOf = (initial) => {
 export default function App() {
   const groups = useMemo(() => buildGroups2D(SIZE), []);
 
+  const [mode, setMode] = useState('classic'); // 'classic'(2D) | 'cube'(3D層スライス)
   const [index, setIndex] = useState(0);
   const puzzle = puzzles[index];
 
@@ -217,54 +219,85 @@ export default function App() {
       <main className="w-full max-w-md flex flex-col items-center gap-4">
         <h1 className="text-[20px] font-bold">いろロジック</h1>
 
-        <RuleInfo />
+        {/* モード切替（2D / 3D層スライス） */}
+        <div className="flex gap-2 w-full" role="tablist" aria-label="モードせんたく">
+          {[
+            { key: 'classic', label: 'ふつう（2D）' },
+            { key: 'cube', label: '3D（だんパズル）' },
+          ].map((m) => (
+            <button
+              key={m.key}
+              type="button"
+              role="tab"
+              aria-selected={mode === m.key}
+              onClick={() => setMode(m.key)}
+              className={
+                'flex-1 min-h-[44px] rounded-xl font-bold text-[15px] transition-colors cursor-pointer ' +
+                'focus:outline-none focus:ring-2 focus:ring-blue-300 ' +
+                (mode === m.key
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300')
+              }
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
 
-        <Grid
-          values={values}
-          hintKeys={hintKeys}
-          selected={selected}
-          rowErrors={rowErrors}
-          colErrors={colErrors}
-          onSelectCell={handleSelectCell}
-        />
+        {mode === 'classic' ? (
+          <>
+            <RuleInfo />
 
-        {/* 許容されない配置（同色重複）の全体メッセージ */}
-        {hasLineError && (
-          <p className="text-red-600 font-bold text-[14px] text-center">
-            ⚠️ おなじ いろが ならんでいる ぎょう／れつ を なおしてね
-          </p>
+            <Grid
+              values={values}
+              hintKeys={hintKeys}
+              selected={selected}
+              rowErrors={rowErrors}
+              colErrors={colErrors}
+              onSelectCell={handleSelectCell}
+            />
+
+            {/* 許容されない配置（同色重複）の全体メッセージ */}
+            {hasLineError && (
+              <p className="text-red-600 font-bold text-[14px] text-center">
+                ⚠️ おなじ いろが ならんでいる ぎょう／れつ を なおしてね
+              </p>
+            )}
+
+            <p className="text-[14px] text-gray-600 min-h-[20px]">
+              {selected ? 'いろボタンで うめてね' : 'マスを えらんでね'}
+            </p>
+
+            <ColorButtons onPick={handlePick} disabled={!selected} />
+
+            <Controls
+              index={index}
+              total={puzzles.length}
+              difficulty={puzzle.difficulty}
+              result={result}
+              onCheck={handleCheck}
+              onReset={handleReset}
+              onPrev={handlePrev}
+              onNext={handleNext}
+            />
+
+            <TimePanel
+              puzzles={puzzles}
+              times={times}
+              flags={flags}
+              currentIndex={index}
+              currentElapsedSec={currentElapsedSec}
+              onJump={loadPuzzle}
+              onOpenRanking={openRanking}
+              playerName={playerName}
+              onNameChange={handleNameChange}
+              onSubmit={handleSubmitScore}
+              submitState={submitState}
+            />
+          </>
+        ) : (
+          <CubeGame />
         )}
-
-        <p className="text-[14px] text-gray-600 min-h-[20px]">
-          {selected ? 'いろボタンで うめてね' : 'マスを えらんでね'}
-        </p>
-
-        <ColorButtons onPick={handlePick} disabled={!selected} />
-
-        <Controls
-          index={index}
-          total={puzzles.length}
-          difficulty={puzzle.difficulty}
-          result={result}
-          onCheck={handleCheck}
-          onReset={handleReset}
-          onPrev={handlePrev}
-          onNext={handleNext}
-        />
-
-        <TimePanel
-          puzzles={puzzles}
-          times={times}
-          flags={flags}
-          currentIndex={index}
-          currentElapsedSec={currentElapsedSec}
-          onJump={loadPuzzle}
-          onOpenRanking={openRanking}
-          playerName={playerName}
-          onNameChange={handleNameChange}
-          onSubmit={handleSubmitScore}
-          submitState={submitState}
-        />
       </main>
 
       <RankingModal
