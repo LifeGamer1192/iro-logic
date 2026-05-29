@@ -6,6 +6,9 @@ import Controls from './components/Controls.jsx';
 import Tutorial from './components/Tutorial.jsx';
 import RuleInfo from './components/RuleInfo.jsx';
 import TimePanel from './components/TimePanel.jsx';
+import RankingModal from './components/RankingModal.jsx';
+import { fetchScores, submitScore } from './utils/api.js';
+import { summarizeTimes, verificationCode } from './utils/play.js';
 import {
   buildGroups2D,
   gridToValues,
@@ -24,6 +27,7 @@ const monoNow = () =>
     : Date.now();
 
 const TUTORIAL_KEY = 'iro-logic:tutorial-seen';
+const NAME_KEY = 'iro-logic:player-name'; // 名前はブラウザを閉じても保持
 
 // initial(2D配列) から「ヒントのセルキー集合」を作る
 const hintKeysOf = (initial) => {
@@ -49,6 +53,50 @@ export default function App() {
   const [showTutorial, setShowTutorial] = useState(
     () => localStorage.getItem(TUTORIAL_KEY) !== '1'
   );
+
+  // --- 名前（localStorage 永続）＆ランキング ---
+  const [playerName, setPlayerName] = useState(() => localStorage.getItem(NAME_KEY) || '');
+  const [rankingOpen, setRankingOpen] = useState(false);
+  const [ranking, setRanking] = useState([]);
+  const [rankingState, setRankingState] = useState({ status: 'idle' }); // 取得状態
+  const [submitState, setSubmitState] = useState({ status: 'idle' }); // 登録状態
+
+  const handleNameChange = (name) => {
+    setPlayerName(name);
+    localStorage.setItem(NAME_KEY, name);
+  };
+
+  const openRanking = async () => {
+    setRankingOpen(true);
+    setRankingState({ status: 'loading' });
+    try {
+      const scores = await fetchScores();
+      setRanking(scores);
+      setRankingState({ status: 'done' });
+    } catch (e) {
+      setRankingState({ status: 'error', message: String(e?.message || e) });
+    }
+  };
+
+  const handleSubmitScore = async () => {
+    const summary = summarizeTimes(times, puzzles);
+    if (!summary.allDone) return;
+    setSubmitState({ status: 'sending' });
+    try {
+      const scores = await submitScore({
+        name: playerName.trim(),
+        totalSec: summary.grandTotal,
+        clears: summary.doneCount,
+        code: verificationCode(times),
+      });
+      setRanking(scores);
+      setSubmitState({ status: 'done' });
+      setRankingState({ status: 'done' });
+      setRankingOpen(true); // 登録後にランキングを開いて結果を見せる
+    } catch (e) {
+      setSubmitState({ status: 'error', message: String(e?.message || e) });
+    }
+  };
 
   // --- タイマー関連（★3：performance.now ベース） ---
   const [times, setTimes] = useState({}); // index → クリア所要秒
@@ -210,8 +258,22 @@ export default function App() {
           flags={flags}
           currentIndex={index}
           currentElapsedSec={currentElapsedSec}
+          onJump={loadPuzzle}
+          onOpenRanking={openRanking}
+          playerName={playerName}
+          onNameChange={handleNameChange}
+          onSubmit={handleSubmitScore}
+          submitState={submitState}
         />
       </main>
+
+      <RankingModal
+        open={rankingOpen}
+        onClose={() => setRankingOpen(false)}
+        scores={ranking}
+        loading={rankingState.status === 'loading'}
+        error={rankingState.status === 'error'}
+      />
     </div>
   );
 }
