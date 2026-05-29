@@ -9,6 +9,7 @@ export default function TimePanel({
   puzzles,
   times,
   flags = {},
+  redone = {},
   currentIndex,
   currentElapsedSec,
   onJump,
@@ -65,11 +66,15 @@ export default function TimePanel({
                         (current ? ' ring-2 ring-blue-400' : '')
                       }
                       title={
-                        susp ? 'はやすぎる／操作が少ない記録（記録対象外）' : `ステージ ${p.id} へいどう`
+                        susp
+                          ? 'はやすぎる／操作が少ない記録（記録対象外）'
+                          : redone[i] && done
+                            ? 'やりなおしを つかったステージ'
+                            : `ステージ ${p.id} へいどう`
                       }
                     >
                       {p.id}: {done ? formatTime(times[i]) : '—'}
-                      {susp ? ' ⚠️' : ''}
+                      {susp ? ' ⚠️' : redone[i] && done ? ' ↺' : ''}
                     </button>
                   );
                 })}

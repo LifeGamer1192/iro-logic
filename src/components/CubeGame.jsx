@@ -21,6 +21,7 @@ import { formatTime, verificationCode, flagStage } from '../utils/play.js';
 import { fetchScores, submitScore } from '../utils/api.js';
 
 const NAME_KEY = 'iro-logic:player-name';
+const RULES_SEEN_KEY = 'iro-logic:cube-rules-seen';
 const TOTAL = cubePuzzles.length;
 const COLOR_LABEL = { red: 'あか', yellow: 'きいろ', blue: 'あお' };
 
@@ -91,6 +92,7 @@ export default function CubeGame() {
   // タイム計測（performance.now ベース）＆チート抑止
   const [times, setTimes] = useState({});
   const [flags, setFlags] = useState({});
+  const [redone, setRedone] = useState({}); // やりなおしを使ったステージ
   const [placeCount, setPlaceCount] = useState(0);
   const [stageStartAt, setStageStartAt] = useState(() => monoNow());
   const [now, setNow] = useState(() => monoNow());
@@ -117,6 +119,15 @@ export default function CubeGame() {
   useEffect(() => {
     const id = setInterval(() => setNow(monoNow()), 1000);
     return () => clearInterval(id);
+  }, []);
+
+  // 3Dに切り替えた瞬間（初回のみ）に「はしら」の詳細ルールを自動表示。
+  // 2回目以降は ❓くわしく ボタンから確認できる。
+  useEffect(() => {
+    if (localStorage.getItem(RULES_SEEN_KEY) !== '1') {
+      setShowRules(true);
+      localStorage.setItem(RULES_SEEN_KEY, '1');
+    }
   }, []);
 
   const load = (i) => {
@@ -160,6 +171,7 @@ export default function CubeGame() {
     setSelected(null);
     setResult(null);
     setPlaceCount(0);
+    setRedone((prev) => ({ ...prev, [index]: true }));
     setTimes((prev) => {
       const n = { ...prev };
       delete n[index];
@@ -256,8 +268,8 @@ export default function CubeGame() {
       {/* 3D立方体ビュー（ドラッグで回転・平面の編集が即時反映） */}
       <CubeView values={values} />
 
-      {/* 3段の層スライス（ここで色を置く） */}
-      <div className="flex flex-row flex-wrap justify-center gap-4">
+      {/* 3段の層スライス（縦並び。ここで色を置く） */}
+      <div className="flex flex-col items-center gap-4">
         {Array.from({ length: SIZE3 }, (_, z) => (
           <Layer
             key={z}
@@ -340,6 +352,7 @@ export default function CubeGame() {
                 key={p.id}
                 type="button"
                 onClick={() => load(i)}
+                title={redone[i] && done ? 'やりなおしを つかったステージ' : `ステージ ${p.id}`}
                 className={
                   'text-[11px] px-1.5 py-0.5 rounded tabular-nums border cursor-pointer hover:brightness-95 transition ' +
                   (susp
@@ -351,7 +364,7 @@ export default function CubeGame() {
                 }
               >
                 {p.id}: {done ? formatTime(times[i]) : '—'}
-                {susp ? ' ⚠️' : ''}
+                {susp ? ' ⚠️' : redone[i] && done ? ' ↺' : ''}
               </button>
             );
           })}

@@ -1,6 +1,6 @@
 // 3D立方体ビュー（CSS 3D変換・依存なし）。
 // ドラッグでグリグリ回転。色の置き/消しは平面側で行い、values の変化が即時反映される（読み取り専用表示）。
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { cellKey, SIZE } from '../utils/validate.js';
 
 const CELL = 42; // 1キューブレットの一辺(px)
@@ -39,22 +39,40 @@ function Cubelet({ color, dim }) {
 
 export default function CubeView({ values, size = SIZE }) {
   const [rot, setRot] = useState({ x: -22, y: -32 });
-  const drag = useRef(null);
+  const dragging = useRef(false);
+  const last = useRef({ x: 0, y: 0 });
+
+  // ドラッグ中は window 全体で move/up を拾う。
+  // こうすると指が立方体の外やセルの上を通っても 1回のドラッグで連続回転できる
+  //（スマホで pointer capture が切れて「1ミリずつ」しか動かない問題を解消）。
+  useEffect(() => {
+    const move = (e) => {
+      if (!dragging.current) return;
+      if (e.cancelable) e.preventDefault();
+      const x = e.clientX;
+      const y = e.clientY;
+      const dx = x - last.current.x;
+      const dy = y - last.current.y;
+      last.current = { x, y };
+      setRot((r) => ({ x: r.x - dy * 0.6, y: r.y + dx * 0.6 }));
+    };
+    const stop = () => {
+      dragging.current = false;
+    };
+    window.addEventListener('pointermove', move, { passive: false });
+    window.addEventListener('pointerup', stop);
+    window.addEventListener('pointercancel', stop);
+    return () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', stop);
+      window.removeEventListener('pointercancel', stop);
+    };
+  }, []);
 
   const onPointerDown = (e) => {
-    drag.current = { x: e.clientX, y: e.clientY };
-    e.currentTarget.setPointerCapture?.(e.pointerId);
-  };
-  const onPointerMove = (e) => {
-    if (!drag.current) return;
-    const dx = e.clientX - drag.current.x;
-    const dy = e.clientY - drag.current.y;
-    drag.current = { x: e.clientX, y: e.clientY };
-    setRot((r) => ({ x: r.x - dy * 0.6, y: r.y + dx * 0.6 }));
-  };
-  const onPointerUp = (e) => {
-    drag.current = null;
-    e.currentTarget.releasePointerCapture?.(e.pointerId);
+    dragging.current = true;
+    last.current = { x: e.clientX, y: e.clientY };
+    if (e.cancelable) e.preventDefault();
   };
 
   const idx = Array.from({ length: size }, (_, i) => i);
@@ -66,9 +84,6 @@ export default function CubeView({ values, size = SIZE }) {
         className="relative cursor-grab active:cursor-grabbing select-none"
         style={{ width: 230, height: 230, perspective: '760px', touchAction: 'none' }}
         onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerLeave={onPointerUp}
         role="img"
         aria-label="3D立方体（ドラッグでまわせる）"
       >

@@ -103,6 +103,7 @@ export default function App() {
   // --- タイマー関連（★3：performance.now ベース） ---
   const [times, setTimes] = useState({}); // index → クリア所要秒
   const [flags, setFlags] = useState({}); // index → { tooFewMoves, tooFast, suspicious }
+  const [redone, setRedone] = useState({}); // index → true（やりなおしを使ったステージ）
   const [placeCount, setPlaceCount] = useState(0); // 現ステージで色を置いた回数（★2）
   const [stageStartAt, setStageStartAt] = useState(() => monoNow());
   const [now, setNow] = useState(() => monoNow());
@@ -180,6 +181,7 @@ export default function App() {
     setSelected(null);
     setResult(null);
     setPlaceCount(0);
+    setRedone((prev) => ({ ...prev, [index]: true })); // やりなおし使用を記録（再クリアしても残す）
     // このステージのタイム・フラグを取り消して計り直す
     setTimes((prev) => {
       const next = { ...prev };
@@ -285,6 +287,7 @@ export default function App() {
               puzzles={puzzles}
               times={times}
               flags={flags}
+              redone={redone}
               currentIndex={index}
               currentElapsedSec={currentElapsedSec}
               onJump={loadPuzzle}
