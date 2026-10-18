@@ -34,6 +34,8 @@ const SECRET_TAPS = 5;
 const SECRET_WINDOW_MS = 2500;
 // 隠しリンク2：タイトルを 1.5 秒ながおしすると、同じサイトの そろばん（/soroban/）へ移動する
 const SOROBAN_URL = '/soroban/';
+// 公開リンク：トップの下に、同じサイトの しろくろ ドット（/dot/）へのリンクを出す
+const DOT_URL = 'https://iro-logic.vercel.app/dot/';
 const LONG_PRESS_MS = 1500;
 const NAME_KEY = 'iro-logic:player-name'; // 名前はブラウザを閉じても保持
 
@@ -349,6 +351,16 @@ export default function App() {
           <CubeGame />
         )}
       </main>
+
+      {/* 同じサイトのドット絵アプリへのリンク（見える形） */}
+      <footer className="w-full max-w-md mt-8 mb-2 flex justify-center">
+        <a
+          href={DOT_URL}
+          className="min-h-[44px] inline-flex items-center gap-2 px-4 rounded-xl border-2 border-gray-300 bg-white text-[15px] font-bold text-gray-700 hover:bg-gray-100"
+        >
+          <span aria-hidden="true">▦</span> ドット絵を かく（しろくろ ドット）
+        </a>
+      </footer>
 
       <RankingModal
         open={rankingOpen}

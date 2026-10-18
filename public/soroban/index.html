@@ -59,7 +59,9 @@
     .mode[data-mode="make"] { border-color: #8fd0c4; box-shadow: 0 6px 0 #5fb3a4; }
     .mode[data-mode="read"] { border-color: #a9c6f0; box-shadow: 0 6px 0 #7aa4de; }
     .mode[data-mode="add"] { border-color: #f4a7a0; box-shadow: 0 6px 0 #e07c72; }
-    .home-foot { text-align: center; }
+    .home-foot { display: flex; justify-content: center; align-items: center; gap: 4px 12px; flex-wrap: wrap; }
+    .dotlink { display: inline-flex; align-items: center; min-height: 44px; padding: 4px 10px; white-space: nowrap; border-radius: 16px; color: var(--dim); font-weight: bold; text-decoration: none; -webkit-touch-callout: none; }
+    .dotlink:active { color: var(--ink); }
 
     /* ---- 遊ぶ画面 ---- */
     .play { height: 100%; display: grid; grid-template-rows: auto auto 1fr auto; grid-template-areas: "bar" "prompt" "stage" "tools"; position: relative; }
@@ -158,6 +160,12 @@
       .modes { grid-template-columns: repeat(4, minmax(0, 1fr)); }
       .mode { min-height: 120px; }
       .mode .icon { width: 64px; height: 64px; }
+      /* 下の「おうちの かたへ」「ドットえを かく」まで画面に収める（収まらないときは スクロール） */
+      .home { overflow-y: auto; padding: 8px 16px; gap: 6px; }
+      .mode { min-height: 0; padding: 8px 6px; gap: 2px; }
+      .mode b { font-size: 18px; white-space: nowrap; }
+      .mode small { font-size: 12px; }
+      .home-foot button, .dotlink { min-height: 40px; }
     }
     @media (max-width: 480px) {
       .bar .title { font-size: 17px; }
@@ -168,7 +176,7 @@
       .choice { min-width: 88px; font-size: 40px; }
     }
   </style>
-  <script type="module" crossorigin src="./assets/index-UQdLjcK3.js"></script>
+  <script type="module" crossorigin src="./assets/index-BRmOvAVl.js"></script>
 </head>
 <body>
   <div id="app"></div>

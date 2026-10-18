@@ -64,6 +64,26 @@
     .ink.on { background: var(--card); color: var(--ink); outline: 3px solid var(--accent); outline-offset: 1px; }
     .ink small { position: absolute; left: 0; right: 0; bottom: -1px; font-size: 9.5px; line-height: 1; color: var(--accent); font-weight: bold; }
     .sep { width: 2px; align-self: stretch; background: var(--soft); }
+    .glyph { font-size: 18px; line-height: 24px; }
+    .pensz { display: block; width: 24px; height: 24px; position: relative; }
+    .pensz::after { content: ""; position: absolute; left: 50%; top: 50%; width: calc(var(--n) * 5px); height: calc(var(--n) * 5px); transform: translate(-50%, -50%); background: currentColor; }
+
+    /* カラーのパレット */
+    .pal { display: grid; grid-template-columns: repeat(9, 30px); gap: 3px; }
+    .sw { width: 30px; height: 30px; min-height: 0; padding: 0; border-radius: 6px; border-width: 2px; box-shadow: 0 2px 0 var(--line); background: var(--c); }
+    .sw.on, .sw.on:active { background: var(--c); outline: 3px solid var(--accent); outline-offset: 1px; color: var(--ink); }
+    .sw.clear { background: repeating-conic-gradient(#bdbdbd 0 25%, #ececec 0 50%) 0 0 / 10px 10px; }
+    .sw.add { background: var(--card); font-weight: bold; font-size: 18px; line-height: 1; }
+    .tool .cur { display: block; width: 24px; height: 24px; border: 2px solid var(--line); border-radius: 4px; background: var(--c); }
+    .tool.on .cur, .tool:disabled .cur { border-color: currentColor; }
+    .color-input { position: fixed; left: 50%; bottom: 50%; width: 1px; height: 1px; opacity: 0; pointer-events: none; border: 0; padding: 0; }
+
+    /* 説明（マウスを乗せる・押す・長押し） */
+    .tip { position: fixed; z-index: 200; max-width: min(300px, calc(100vw - 16px)); padding: 8px 11px; background: #1b1b1b; color: #fff; border-radius: 9px; font-size: 13px; line-height: 1.55; box-shadow: 0 4px 14px rgba(0,0,0,0.3); pointer-events: none; opacity: 0; transition: opacity 0.12s; left: -999px; top: -999px; }
+    .tip.show { opacity: 1; }
+    .tip b { display: block; font-size: 13.5px; margin-bottom: 2px; color: #ffd84a; }
+    .custom label { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; }
+    .custom input { width: 72px; min-height: 40px; font: inherit; font-size: 16px; padding: 4px 8px; border: 2.5px solid var(--line); border-radius: 8px; -webkit-user-select: text; user-select: text; }
 
     /* シート（保存・書き出し・新しい絵・へんしん） */
     .sheet-back { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 12px; background: rgba(0,0,0,0.35); }
@@ -105,6 +125,7 @@
       .tools { flex-direction: column; flex-wrap: nowrap; justify-content: flex-start; border-top: 0; border-right: 2.5px solid var(--line); overflow-y: auto; padding: 8px 6px; width: 124px; }
       .grp { flex-wrap: wrap; justify-content: center; }
       .sep { width: auto; height: 2px; align-self: stretch; }
+      .pal { grid-template-columns: repeat(3, 30px); }
     }
     /* スマホの横（低い画面）：道具を左に、小さく */
     @media (orientation: landscape) and (max-height: 500px) {
@@ -118,6 +139,7 @@
       .tool { width: 44px; min-height: 44px; }
       .tool small { display: none; }
       .ink { width: 44px; height: 44px; }
+      .sw { width: 44px; height: 30px; }
     }
     /* スマホの縦：道具を下に、小さく */
     @media (orientation: portrait) and (max-width: 520px) {
@@ -130,7 +152,7 @@
       .sep { display: none; }
     }
   </style>
-  <script type="module" crossorigin src="./assets/index-CjJkw184.js"></script>
+  <script type="module" crossorigin src="./assets/index-Nc-urCbR.js"></script>
 </head>
 <body>
   <div id="app"></div>
