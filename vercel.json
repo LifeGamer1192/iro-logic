@@ -3,5 +3,6 @@
   "framework": "vite",
   "buildCommand": "vite build",
   "outputDirectory": "dist",
-  "rewrites": [{ "source": "/(.*)", "destination": "/" }]
+  "redirects": [{ "source": "/soroban", "destination": "/soroban/", "permanent": false }],
+  "rewrites": [{ "source": "/((?!soroban/|api/).*)", "destination": "/" }]
 }

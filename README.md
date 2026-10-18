@@ -84,6 +84,10 @@ UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN
 
 なお、プレイヤー名はブラウザの localStorage に保存され、閉じても保持されます。
 
+## 同居しているアプリ（/soroban/）
+
+`public/soroban/` は、別プロジェクト「ぱちぱち そろばん」（幼児向けそろばん）のビルド結果です。同じドメインで開けるように、ここに置いています。手で直さず、そろばん側でビルドしたものを丸ごと写します。`vercel.json` の rewrites は `/soroban/` をトップへの書き換えから外しています。
+
 ## デプロイ
 
 Vite ビルドをそのまま静的ホスティングできます（Vercel 等）。`api/` 配下はサーバーレス関数として自動デプロイされます。
