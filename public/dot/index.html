@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="ドット">
+  <title>しろくろ ドット</title>
+  <meta name="description" content="白と黒で描くドット絵のお絵かき。Scratch に取り込みやすい SVG・PNG で書き出せます。iPad・スマホ・PC のブラウザで。">
+  <meta name="theme-color" content="#ecebe6">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8' shape-rendering='crispEdges'%3E%3Crect width='8' height='8' fill='%23fff'/%3E%3Cpath d='M0 0h8v1H0zM0 7h8v1H0zM0 0h1v8H0zM7 0h1v8H7zM2 2h1v1H2zM4 2h1v1H4zM3 3h1v1H3zM5 3h1v1H5zM2 4h1v1H2zM4 4h1v1H4zM3 5h1v1H3zM5 5h1v1H5z' fill='%23000'/%3E%3C/svg%3E">
+  <style>
+    /* スマホ向けの指定は 流用元: p-soroban/index.html（元は hex-sim/index.html） */
+    :root {
+      --bg: #ecebe6; --ink: #111111; --dim: #5f5f5a; --card: #ffffff; --line: #111111; --soft: #d6d5cf;
+      --accent: #e0362b;
+      --font: "Hiragino Maru Gothic ProN", "BIZ UDPGothic", "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body, #app { height: 100%; margin: 0; }
+    @supports (height: 100dvh) { html, body, #app { height: 100dvh; } }
+    html, body { overscroll-behavior: none; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; overflow: hidden; }
+    body {
+      background: var(--bg); color: var(--ink); font: 15px/1.5 var(--font);
+      touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+    }
+    #app { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+    button {
+      font: inherit; color: var(--ink); background: var(--card); border: 2.5px solid var(--line); border-radius: 10px;
+      padding: 6px 12px; cursor: pointer; box-shadow: 0 3px 0 var(--line); transition: transform 0.06s, box-shadow 0.06s;
+      -webkit-user-select: none; user-select: none; touch-action: manipulation; min-height: 40px;
+    }
+    button:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--line); }
+    button.on { background: var(--ink); color: #fff; }
+    button:disabled { opacity: 0.35; cursor: default; transform: none; box-shadow: 0 3px 0 var(--line); }
+    button.primary { background: var(--ink); color: #fff; font-weight: bold; }
+    button.danger { color: var(--accent); border-color: var(--accent); box-shadow: 0 3px 0 var(--accent); }
+    .ic { width: 24px; height: 24px; display: block; }
+
+    .app { height: 100%; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: "bar" "stage" "tools"; }
+    .bar { grid-area: bar; display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-bottom: 2.5px solid var(--line); background: var(--card); }
+    .bar h1 { margin: 0; font-size: 18px; display: flex; align-items: center; gap: 6px; white-space: nowrap; letter-spacing: 0.04em; }
+    .bar h1 .ic { width: 22px; height: 22px; }
+    .bar .meta { flex: 1 1 0; font-size: 13px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+    .bar button { padding: 4px 10px; font-weight: bold; flex-shrink: 0; white-space: nowrap; }
+    .stage { grid-area: stage; position: relative; overflow: hidden; background: #c9c8c2; }
+    canvas.board { position: absolute; inset: 0; display: block; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+    .zoom { position: absolute; right: 8px; bottom: 8px; display: flex; gap: 6px; }
+    .zoom button { min-width: 44px; padding: 4px 8px; font-weight: bold; }
+    .toast { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 6px 14px; border-radius: 10px; font-size: 14px; pointer-events: none; opacity: 0; transition: opacity 0.2s; white-space: nowrap; }
+    .toast.show { opacity: 1; }
+
+    .tools { grid-area: tools; display: flex; flex-wrap: wrap; gap: 6px 10px; justify-content: center; align-items: center; padding: 8px; border-top: 2.5px solid var(--line); background: var(--card); }
+    .grp { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; align-items: center; }
+    .tool { width: 50px; min-height: 50px; padding: 3px 0 2px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; }
+    .tool small { font-size: 10.5px; line-height: 1.1; white-space: nowrap; }
+    .ink { width: 46px; height: 46px; min-height: 0; padding: 0; position: relative; }
+    .ink i { position: absolute; inset: 6px; border: 2px solid var(--line); border-radius: 4px; }
+    .ink[data-ink="2"] i { background: #000; }
+    .ink[data-ink="1"] i { background: #fff; }
+    .ink[data-ink="0"] i { background: repeating-conic-gradient(#bdbdbd 0 25%, #ececec 0 50%) 0 0 / 12px 12px; }
+    .ink.on { background: var(--card); color: var(--ink); outline: 3px solid var(--accent); outline-offset: 1px; }
+    .ink small { position: absolute; left: 0; right: 0; bottom: -1px; font-size: 9.5px; line-height: 1; color: var(--accent); font-weight: bold; }
+    .sep { width: 2px; align-self: stretch; background: var(--soft); }
+
+    /* シート（保存・書き出し・新しい絵・へんしん） */
+    .sheet-back { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 12px; background: rgba(0,0,0,0.35); }
+    .sheet { width: min(680px, 100%); max-height: 100%; overflow: auto; overscroll-behavior: contain; background: var(--card); border: 2.5px solid var(--line); border-radius: 14px; padding: 14px 16px; box-shadow: 0 6px 0 var(--line); }
+    .sheet h2 { margin: 0 0 8px; font-size: 20px; display: flex; align-items: center; gap: 8px; }
+    .sheet h2 .x { margin-left: auto; }
+    .sheet h3 { margin: 12px 0 6px; font-size: 15px; }
+    .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .note { font-size: 13px; color: var(--dim); line-height: 1.6; margin: 6px 0; }
+    .note b { color: var(--ink); }
+    .seg button { padding: 4px 10px; font-size: 14px; }
+    .slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+    .slot { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 4px; min-height: 120px; }
+    .slot img, .slot .empty { width: 72px; height: 72px; object-fit: contain; image-rendering: pixelated; background: repeating-conic-gradient(#d0d0d0 0 25%, #f0f0f0 0 50%) 0 0 / 12px 12px; border: 1.5px solid var(--soft); }
+    .slot .empty { background: #f6f6f3; }
+    .slot b { font-size: 14px; }
+    .slot small { font-size: 10.5px; color: var(--dim); }
+    .slot.sel { outline: 3px solid var(--accent); outline-offset: 1px; }
+    .slot.on { background: var(--card); color: var(--ink); }
+    .preview { display: flex; justify-content: center; align-items: center; min-height: 140px; padding: 10px; margin: 8px 0; border: 1.5px dashed var(--soft); border-radius: 10px; background: repeating-conic-gradient(#d0d0d0 0 25%, #f0f0f0 0 50%) 0 0 / 16px 16px; }
+    .preview img { max-width: 100%; max-height: 220px; image-rendering: pixelated; }
+    .sizes { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 6px; }
+    .sizes button { display: flex; flex-direction: column; align-items: flex-start; padding: 6px 10px; text-align: left; }
+    .sizes button b { font-size: 16px; }
+    .sizes button small { font-size: 11px; opacity: 0.8; }
+    .tpls { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 6px; }
+    .tpls button { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 4px; font-size: 13px; }
+    .tpls img { width: 48px; height: 48px; image-rendering: pixelated; background: repeating-conic-gradient(#d0d0d0 0 25%, #f0f0f0 0 50%) 0 0 / 8px 8px; }
+    .tpls button.on img { outline: 2px solid #fff; }
+    .pad { display: grid; grid-template-columns: repeat(3, 48px); gap: 4px; justify-content: start; }
+    .pad button { padding: 0; font-size: 20px; font-weight: bold; }
+    .steps { margin: 4px 0; padding-left: 1.4em; font-size: 13.5px; line-height: 1.7; }
+    label.chk { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; padding: 4px 0; }
+    label.chk input { width: 22px; height: 22px; accent-color: #111; }
+
+    /* 横に広い画面：道具を左に縦に並べる */
+    @media (orientation: landscape) and (min-width: 700px) {
+      .app { grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); grid-template-areas: "bar bar" "tools stage"; }
+      .tools { flex-direction: column; flex-wrap: nowrap; justify-content: flex-start; border-top: 0; border-right: 2.5px solid var(--line); overflow-y: auto; padding: 8px 6px; width: 124px; }
+      .grp { flex-wrap: wrap; justify-content: center; }
+      .sep { width: auto; height: 2px; align-self: stretch; }
+    }
+    /* スマホの横（低い画面）：道具を左に、小さく */
+    @media (orientation: landscape) and (max-height: 500px) {
+      .app { grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); grid-template-areas: "bar bar" "tools stage"; }
+      .bar { padding: 2px 8px; }
+      .bar button { min-height: 34px; padding: 2px 8px; font-size: 13px; }
+      .bar h1 { font-size: 15px; }
+      .tools { display: grid; grid-template-columns: repeat(3, 44px); width: auto; align-content: start; justify-content: start; gap: 4px; border-top: 0; border-right: 2.5px solid var(--line); overflow-y: auto; padding: 4px 6px; }
+      .grp { display: contents; }
+      .sep { display: none; }
+      .tool { width: 44px; min-height: 44px; }
+      .tool small { display: none; }
+      .ink { width: 44px; height: 44px; }
+    }
+    /* スマホの縦：道具を下に、小さく */
+    @media (orientation: portrait) and (max-width: 520px) {
+      .bar h1 span { display: none; }
+      .bar button { padding: 3px 8px; font-size: 13.5px; }
+      .tools { gap: 5px 6px; padding: 6px 4px; }
+      .tool { width: 44px; min-height: 46px; }
+      .tool small { font-size: 9.5px; }
+      .ink { width: 42px; height: 42px; }
+      .sep { display: none; }
+    }
+  </style>
+  <script type="module" crossorigin src="./assets/index-CjJkw184.js"></script>
+</head>
+<body>
+  <div id="app"></div>
+</body>
+</html>
