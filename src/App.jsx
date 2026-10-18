@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import puzzles from './data/puzzles.js';
 import Grid from './components/Grid.jsx';
 import ColorButtons from './components/ColorButtons.jsx';
@@ -32,6 +32,9 @@ const TUTORIAL_KEY = 'iro-logic:tutorial-seen';
 const MENU_URL = 'https://lifegamer1192.github.io/menu.html';
 const SECRET_TAPS = 5;
 const SECRET_WINDOW_MS = 2500;
+// 隠しリンク2：タイトルを 1.5 秒ながおしすると、同じサイトの そろばん（/soroban/）へ移動する
+const SOROBAN_URL = '/soroban/';
+const LONG_PRESS_MS = 1500;
 const NAME_KEY = 'iro-logic:player-name'; // 名前はブラウザを閉じても保持
 
 // initial(2D配列) から「ヒントのセルキー集合」を作る
@@ -143,7 +146,23 @@ export default function App() {
 
   // 隠しリンク用：直近のタイトルのタップ時刻
   const [titleTaps, setTitleTaps] = useState([]);
+  // 隠しリンク2用：ながおしのタイマー。指が離れる・外れると取り消す
+  const pressTimer = useRef(null);
+  const longPressed = useRef(false);
+  const handleTitlePressStart = () => {
+    longPressed.current = false;
+    clearTimeout(pressTimer.current);
+    pressTimer.current = setTimeout(() => {
+      longPressed.current = true;
+      window.location.href = SOROBAN_URL;
+    }, LONG_PRESS_MS);
+  };
+  const handleTitlePressEnd = () => clearTimeout(pressTimer.current);
+  useEffect(() => () => clearTimeout(pressTimer.current), []);
+
   const handleTitleTap = () => {
+    // ながおしのあとに来るクリックは、5回タップの数に入れない
+    if (longPressed.current) return;
     const t = monoNow();
     const recent = [...titleTaps, t].filter((x) => t - x <= SECRET_WINDOW_MS);
     if (recent.length >= SECRET_TAPS) {
@@ -236,7 +255,16 @@ export default function App() {
       {showTutorial && <Tutorial onClose={closeTutorial} />}
 
       <main className="w-full max-w-md flex flex-col items-center gap-4">
-        <h1 className="text-[20px] font-bold select-none" onClick={handleTitleTap}>
+        <h1
+          className="text-[20px] font-bold select-none"
+          style={{ WebkitTouchCallout: 'none' }}
+          onClick={handleTitleTap}
+          onPointerDown={handleTitlePressStart}
+          onPointerUp={handleTitlePressEnd}
+          onPointerLeave={handleTitlePressEnd}
+          onPointerCancel={handleTitlePressEnd}
+          onContextMenu={(e) => e.preventDefault()}
+        >
           いろロジック
         </h1>
 

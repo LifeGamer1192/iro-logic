@@ -70,6 +70,15 @@
     .back { padding: 6px 12px; font-weight: bold; }
     .levels { display: flex; gap: 6px; }
     .levels button { padding: 4px 12px; border-radius: 14px; font-size: 15px; box-shadow: 0 3px 0 var(--line); }
+    .lvpick { display: inline-flex; align-items: baseline; gap: 8px; flex-wrap: wrap; padding: 4px 14px; border-radius: 16px; text-align: left; }
+    .lvpick b { font-size: 18px; color: #6b3d1f; }
+    .lvpick small { font-size: 13px; color: var(--dim); }
+    .stars { color: #f2a91a; letter-spacing: 1px; font-size: 16px; }
+    .lvgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin: 6px 0 10px; }
+    .lvgrid button { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 6px; border-radius: 18px; min-height: 96px; }
+    .lvgrid button b { font-size: 26px; color: #6b3d1f; }
+    .lvgrid button small { font-size: 12.5px; line-height: 1.35; color: #6b5440; }
+    .lvgrid button.locked { opacity: 0.45; box-shadow: none; }
     .prompt { grid-area: prompt; text-align: center; padding: 0 12px; min-height: 0; }
     .stage { grid-area: stage; position: relative; min-height: 0; overflow: hidden; }
     canvas.abacus { position: absolute; inset: 0; display: block; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
@@ -147,7 +156,7 @@
       .choice { min-width: 88px; font-size: 40px; }
     }
   </style>
-  <script type="module" crossorigin src="./assets/index-Xmeb5Ugb.js"></script>
+  <script type="module" crossorigin src="./assets/index-C_lH3pPA.js"></script>
 </head>
 <body>
   <div id="app"></div>
