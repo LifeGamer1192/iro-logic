@@ -28,6 +28,10 @@ const monoNow = () =>
     : Date.now();
 
 const TUTORIAL_KEY = 'iro-logic:tutorial-seen';
+// 隠しリンク：タイトルを 2.5 秒以内に 5 回タップすると、作品の一覧（メニュー）へ移動する（見た目には出さない）
+const MENU_URL = 'https://lifegamer1192.github.io/menu.html';
+const SECRET_TAPS = 5;
+const SECRET_WINDOW_MS = 2500;
 const NAME_KEY = 'iro-logic:player-name'; // 名前はブラウザを閉じても保持
 
 // initial(2D配列) から「ヒントのセルキー集合」を作る
@@ -137,6 +141,19 @@ export default function App() {
     setNow(t);
   };
 
+  // 隠しリンク用：直近のタイトルのタップ時刻
+  const [titleTaps, setTitleTaps] = useState([]);
+  const handleTitleTap = () => {
+    const t = monoNow();
+    const recent = [...titleTaps, t].filter((x) => t - x <= SECRET_WINDOW_MS);
+    if (recent.length >= SECRET_TAPS) {
+      setTitleTaps([]);
+      window.location.href = MENU_URL;
+      return;
+    }
+    setTitleTaps(recent);
+  };
+
   const handleSelectCell = (key) => {
     setSelected((prev) => (prev === key ? null : key));
   };
@@ -219,7 +236,9 @@ export default function App() {
       {showTutorial && <Tutorial onClose={closeTutorial} />}
 
       <main className="w-full max-w-md flex flex-col items-center gap-4">
-        <h1 className="text-[20px] font-bold">いろロジック</h1>
+        <h1 className="text-[20px] font-bold select-none" onClick={handleTitleTap}>
+          いろロジック
+        </h1>
 
         {/* モード切替（2D / 3D層スライス） */}
         <div className="flex gap-2 w-full" role="tablist" aria-label="モードせんたく">
