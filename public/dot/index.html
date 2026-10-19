@@ -49,6 +49,13 @@
     canvas.board { position: absolute; inset: 0; display: block; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
     .zoom { position: absolute; right: 8px; bottom: 8px; display: flex; gap: 6px; }
     .zoom button { min-width: 44px; padding: 4px 8px; font-weight: bold; }
+    .frames { position: absolute; left: 8px; bottom: 8px; display: flex; gap: 4px; }
+    .frames button { min-width: 40px; padding: 4px 8px; font-weight: bold; white-space: nowrap; }
+    .flist { display: grid; grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); gap: 6px; }
+    .fthumb { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px; min-height: 0; }
+    .fthumb img { width: 56px; height: 56px; object-fit: contain; image-rendering: pixelated; background: repeating-conic-gradient(#d0d0d0 0 25%, #f0f0f0 0 50%) 0 0 / 8px 8px; }
+    .fthumb.sel { outline: 3px solid var(--accent); outline-offset: 1px; }
+    .preview canvas { image-rendering: pixelated; max-width: 100%; }
     .toast { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 6px 14px; border-radius: 10px; font-size: 14px; pointer-events: none; opacity: 0; transition: opacity 0.2s; white-space: nowrap; }
     .toast.show { opacity: 1; }
 
@@ -156,7 +163,7 @@
       .sep { display: none; }
     }
   </style>
-  <script type="module" crossorigin src="./assets/index-CNzWb5CH.js"></script>
+  <script type="module" crossorigin src="./assets/index-BUW5lxe3.js"></script>
 </head>
 <body>
   <div id="app"></div>
