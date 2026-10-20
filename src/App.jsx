@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import puzzles from './data/puzzles.js';
 import Grid from './components/Grid.jsx';
 import ColorButtons from './components/ColorButtons.jsx';
@@ -28,15 +28,12 @@ const monoNow = () =>
     : Date.now();
 
 const TUTORIAL_KEY = 'iro-logic:tutorial-seen';
-// 隠しリンク：タイトルを 2.5 秒以内に 5 回タップすると、作品の一覧（メニュー）へ移動する（見た目には出さない）
+// 見えるリンク：タイトルの下に そろばん（同じサイトの /soroban/）、ページの下に 作品の一覧（メニュー）
+// （前は隠しリンクだったが、幼稚園児には むずかしかったので 普通のリンクにした）
 const MENU_URL = 'https://lifegamer1192.github.io/menu.html';
-const SECRET_TAPS = 5;
-const SECRET_WINDOW_MS = 2500;
-// 隠しリンク2：タイトルを 1.5 秒ながおしすると、同じサイトの そろばん（/soroban/）へ移動する
 const SOROBAN_URL = '/soroban/';
 // 公開リンク：トップの下に、同じサイトの しろくろ ドット（/dot/）へのリンクを出す
 const DOT_URL = 'https://iro-logic.vercel.app/dot/';
-const LONG_PRESS_MS = 1500;
 const NAME_KEY = 'iro-logic:player-name'; // 名前はブラウザを閉じても保持
 
 // initial(2D配列) から「ヒントのセルキー集合」を作る
@@ -146,35 +143,6 @@ export default function App() {
     setNow(t);
   };
 
-  // 隠しリンク用：直近のタイトルのタップ時刻
-  const [titleTaps, setTitleTaps] = useState([]);
-  // 隠しリンク2用：ながおしのタイマー。指が離れる・外れると取り消す
-  const pressTimer = useRef(null);
-  const longPressed = useRef(false);
-  const handleTitlePressStart = () => {
-    longPressed.current = false;
-    clearTimeout(pressTimer.current);
-    pressTimer.current = setTimeout(() => {
-      longPressed.current = true;
-      window.location.href = SOROBAN_URL;
-    }, LONG_PRESS_MS);
-  };
-  const handleTitlePressEnd = () => clearTimeout(pressTimer.current);
-  useEffect(() => () => clearTimeout(pressTimer.current), []);
-
-  const handleTitleTap = () => {
-    // ながおしのあとに来るクリックは、5回タップの数に入れない
-    if (longPressed.current) return;
-    const t = monoNow();
-    const recent = [...titleTaps, t].filter((x) => t - x <= SECRET_WINDOW_MS);
-    if (recent.length >= SECRET_TAPS) {
-      setTitleTaps([]);
-      window.location.href = MENU_URL;
-      return;
-    }
-    setTitleTaps(recent);
-  };
-
   const handleSelectCell = (key) => {
     setSelected((prev) => (prev === key ? null : key));
   };
@@ -257,18 +225,15 @@ export default function App() {
       {showTutorial && <Tutorial onClose={closeTutorial} />}
 
       <main className="w-full max-w-md flex flex-col items-center gap-4">
-        <h1
-          className="text-[20px] font-bold select-none"
-          style={{ WebkitTouchCallout: 'none' }}
-          onClick={handleTitleTap}
-          onPointerDown={handleTitlePressStart}
-          onPointerUp={handleTitlePressEnd}
-          onPointerLeave={handleTitlePressEnd}
-          onPointerCancel={handleTitlePressEnd}
-          onContextMenu={(e) => e.preventDefault()}
+        <h1 className="text-[20px] font-bold">いろロジック</h1>
+
+        {/* 同じサイトの そろばんへの リンク（幼稚園児にも見つけやすい大きさ） */}
+        <a
+          href={SOROBAN_URL}
+          className="w-full min-h-[52px] inline-flex items-center justify-center gap-2 px-4 rounded-xl border-2 border-amber-300 bg-amber-50 text-[17px] font-bold text-amber-900 hover:bg-amber-100"
         >
-          いろロジック
-        </h1>
+          <span aria-hidden="true">🧮</span> そろばんで あそぶ
+        </a>
 
         {/* モード切替（2D / 3D層スライス） */}
         <div className="flex gap-2 w-full" role="tablist" aria-label="モードせんたく">
@@ -353,12 +318,16 @@ export default function App() {
       </main>
 
       {/* 同じサイトのドット絵アプリへのリンク（見える形） */}
-      <footer className="w-full max-w-md mt-8 mb-2 flex justify-center">
+      <footer className="w-full max-w-md mt-8 mb-2 flex flex-col items-center gap-3">
         <a
           href={DOT_URL}
           className="min-h-[44px] inline-flex items-center gap-2 px-4 rounded-xl border-2 border-gray-300 bg-white text-[15px] font-bold text-gray-700 hover:bg-gray-100"
         >
           <span aria-hidden="true">▦</span> ドット絵を かく（しろくろ ドット）
+        </a>
+        {/* 作品の一覧（おとな向け）。前は隠しリンクだった */}
+        <a href={MENU_URL} className="min-h-[44px] inline-flex items-center px-3 text-[14px] text-gray-500 underline">
+          ほかの あそび（メニュー）
         </a>
       </footer>
 
