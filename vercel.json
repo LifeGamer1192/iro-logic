@@ -3,6 +3,6 @@
   "framework": "vite",
   "buildCommand": "vite build",
   "outputDirectory": "dist",
-  "redirects": [{ "source": "/soroban", "destination": "/soroban/", "permanent": false }, { "source": "/dot", "destination": "/dot/", "permanent": false }],
-  "rewrites": [{ "source": "/((?!soroban/|dot/|api/).*)", "destination": "/" }]
+  "redirects": [{ "source": "/soroban", "destination": "/soroban/", "permanent": false }, { "source": "/dot", "destination": "/dot/", "permanent": false }, { "source": "/kakezan", "destination": "/kakezan/", "permanent": false }],
+  "rewrites": [{ "source": "/((?!soroban/|dot/|kakezan/|api/).*)", "destination": "/" }]
 }
