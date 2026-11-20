@@ -32,6 +32,8 @@ const TUTORIAL_KEY = 'iro-logic:tutorial-seen';
 // （前は隠しリンクだったが、幼稚園児には むずかしかったので 普通のリンクにした）
 const MENU_URL = 'https://lifegamer1192.github.io/menu.html';
 const SOROBAN_URL = '/soroban/';
+// そろばんの すぐ下に、元素工場（別のサイト）への リンクも出す
+const ELEMENT_FACTORY_URL = 'https://lifegamer1192.github.io/element-factory-play/';
 // 公開リンク：トップの下に、同じサイトの しろくろ ドット（/dot/）へのリンクを出す
 const DOT_URL = 'https://iro-logic.vercel.app/dot/';
 const NAME_KEY = 'iro-logic:player-name'; // 名前はブラウザを閉じても保持
@@ -233,6 +235,14 @@ export default function App() {
           className="w-full min-h-[52px] inline-flex items-center justify-center gap-2 px-4 rounded-xl border-2 border-amber-300 bg-amber-50 text-[17px] font-bold text-amber-900 hover:bg-amber-100"
         >
           <span aria-hidden="true">🧮</span> そろばんで あそぶ
+        </a>
+
+        {/* 元素工場（げんそ こうじょう）への リンク。そろばんと同じ大きさで、色だけ変える */}
+        <a
+          href={ELEMENT_FACTORY_URL}
+          className="w-full min-h-[52px] inline-flex items-center justify-center gap-2 px-4 rounded-xl border-2 border-sky-300 bg-sky-50 text-[17px] font-bold text-sky-900 hover:bg-sky-100"
+        >
+          <span aria-hidden="true">🧪</span> げんそ こうじょう で あそぶ
         </a>
 
         {/* モード切替（2D / 3D層スライス） */}
